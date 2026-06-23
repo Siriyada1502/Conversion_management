@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import { MapContainer, TileLayer, Polygon, Marker, Popup, useMapEvents } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Polygon,
+  Marker,
+  Popup,
+  useMapEvents,
+} from "react-leaflet";
 import L from "leaflet";
 import proj4 from "proj4";
 import rawPlotJson from "./data/plot.json";
@@ -9,8 +16,10 @@ const WGS84 = "EPSG:4326";
 
 const markerIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
@@ -18,21 +27,16 @@ const markerIcon = new L.Icon({
 const emptyDetail = {
   name: "",
   owner: "",
-  phone: "",
   crop: "",
-  address: "",
-  soilType: "",
-  waterSource: "",
-  plantDate: "",
-  harvestDate: "",
-  note: "",
 };
 
 function parseNumberList(text) {
-  return String(text || "").split(",").map((v) => Number(v.trim())).filter((v) => !Number.isNaN(v));
+  return String(text || "")
+    .split(",")
+    .map((v) => Number(v.trim()))
+    .filter((v) => !Number.isNaN(v));
 }
 
-// ในไฟล์นี้ plot_lat คือ Northing และ plot_long คือ Easting
 function utmToLatLng(northing, easting) {
   const [lng, lat] = proj4(UTM47, WGS84, [easting, northing]);
   return [lat, lng];
@@ -45,32 +49,53 @@ function latLngToUtm(lat, lng) {
 
 function calculateAreaUtm(utmPoints) {
   if (utmPoints.length < 3) return 0;
+
   let sum = 0;
+
   for (let i = 0; i < utmPoints.length; i++) {
     const j = (i + 1) % utmPoints.length;
     sum += utmPoints[i].easting * utmPoints[j].northing;
     sum -= utmPoints[j].easting * utmPoints[i].northing;
   }
+
   return Math.abs(sum / 2);
 }
 
 function getCenterLatLng(latLngPoints) {
   if (!latLngPoints.length) return [14.6, 101.1];
-  const total = latLngPoints.reduce((sum, p) => ({ lat: sum.lat + p[0], lng: sum.lng + p[1] }), { lat: 0, lng: 0 });
-  return [total.lat / latLngPoints.length, total.lng / latLngPoints.length];
+
+  const total = latLngPoints.reduce(
+    (sum, point) => {
+      sum.lat += point[0];
+      sum.lng += point[1];
+      return sum;
+    },
+    { lat: 0, lng: 0 }
+  );
+
+  return [
+    total.lat / latLngPoints.length,
+    total.lng / latLngPoints.length,
+  ];
 }
 
 function preparePlots(json) {
   const rows = Array.isArray(json) ? json : json.data || [];
+
   return rows.map((plot) => {
     const northings = parseNumberList(plot.plot_lat);
     const eastings = parseNumberList(plot.plot_long);
 
     const utmPoints = northings
-      .map((northing, index) => ({ northing, easting: eastings[index] }))
+      .map((northing, index) => ({
+        northing,
+        easting: eastings[index],
+      }))
       .filter((point) => point.easting);
 
-    const latLngPoints = utmPoints.map((point) => utmToLatLng(point.northing, point.easting));
+    const latLngPoints = utmPoints.map((point) =>
+      utmToLatLng(point.northing, point.easting)
+    );
 
     return {
       ...plot,
@@ -89,9 +114,12 @@ function formatArea(area) {
 function AddPointHandler({ isAdding, onAddPoint }) {
   useMapEvents({
     click(e) {
-      if (isAdding) onAddPoint([e.latlng.lat, e.latlng.lng]);
+      if (isAdding) {
+        onAddPoint([e.latlng.lat, e.latlng.lng]);
+      }
     },
   });
+
   return null;
 }
 
@@ -100,14 +128,7 @@ function toRawSave(plots) {
     plot_id: plot.plot_id,
     name: plot.name || "",
     owner: plot.owner || "",
-    phone: plot.phone || "",
     crop: plot.crop || "",
-    address: plot.address || "",
-    soilType: plot.soilType || "",
-    waterSource: plot.waterSource || "",
-    plantDate: plot.plantDate || "",
-    harvestDate: plot.harvestDate || "",
-    note: plot.note || "",
     plot_lat: plot.plot_lat,
     plot_long: plot.plot_long,
     point_no: plot.point_no,
@@ -130,11 +151,12 @@ export default function App() {
   const [newDetail, setNewDetail] = useState(emptyDetail);
   const [editDetail, setEditDetail] = useState(emptyDetail);
 
-  const filteredPlots = plots.filter((plot) =>
-    String(plot.plot_id).includes(search.trim()) ||
-    String(plot.name || "").toLowerCase().includes(search.toLowerCase()) ||
-    String(plot.owner || "").toLowerCase().includes(search.toLowerCase()) ||
-    String(plot.crop || "").toLowerCase().includes(search.toLowerCase())
+  const filteredPlots = plots.filter(
+    (plot) =>
+      String(plot.plot_id).includes(search.trim()) ||
+      String(plot.name || "").toLowerCase().includes(search.toLowerCase()) ||
+      String(plot.owner || "").toLowerCase().includes(search.toLowerCase()) ||
+      String(plot.crop || "").toLowerCase().includes(search.toLowerCase())
   );
 
   const selectedPlot = plots.find((plot) => plot.plot_id === selectedPlotId);
@@ -145,19 +167,18 @@ export default function App() {
     setEditDetail({
       name: plot.name || "",
       owner: plot.owner || "",
-      phone: plot.phone || "",
       crop: plot.crop || "",
-      address: plot.address || "",
-      soilType: plot.soilType || "",
-      waterSource: plot.waterSource || "",
-      plantDate: plot.plantDate || "",
-      harvestDate: plot.harvestDate || "",
-      note: plot.note || "",
     });
   }
 
   function saveToLocalStorage(updatedPlots) {
-    localStorage.setItem("plots", JSON.stringify({ success: "true", data: toRawSave(updatedPlots) }));
+    localStorage.setItem(
+      "plots",
+      JSON.stringify({
+        success: "true",
+        data: toRawSave(updatedPlots),
+      })
+    );
   }
 
   function savePlotDetail() {
@@ -167,11 +188,19 @@ export default function App() {
     }
 
     const updatedPlots = plots.map((plot) =>
-      plot.plot_id === selectedPlotId ? { ...plot, ...editDetail } : plot
+      plot.plot_id === selectedPlotId
+        ? {
+            ...plot,
+            name: editDetail.name,
+            owner: editDetail.owner,
+            crop: editDetail.crop,
+          }
+        : plot
     );
 
     setPlots(updatedPlots);
     saveToLocalStorage(updatedPlots);
+
     alert("บันทึกรายละเอียดแปลงเรียบร้อยแล้ว");
   }
 
@@ -192,30 +221,46 @@ export default function App() {
 
     const newRawPlot = {
       plot_id: newId,
-      ...newDetail,
       name: newDetail.name || `แปลง ${newId}`,
+      owner: newDetail.owner,
+      crop: newDetail.crop,
       plot_lat: closedUtm.map((p) => p.northing.toFixed(5)).join(","),
       plot_long: closedUtm.map((p) => p.easting.toFixed(6)).join(","),
       point_no: closedUtm.map((_, index) => index + 1).join(","),
     };
 
     const updatedPlots = [...plots, ...preparePlots([newRawPlot])];
+
     setPlots(updatedPlots);
     saveToLocalStorage(updatedPlots);
+
     clearNewPlot();
     setIsAdding(false);
+
     alert("บันทึกแปลงใหม่เรียบร้อยแล้ว");
   }
 
   function downloadJson() {
-    const blob = new Blob([JSON.stringify({ success: "true", data: toRawSave(plots) }, null, 2)], {
-      type: "application/json",
-    });
+    const blob = new Blob(
+      [
+        JSON.stringify(
+          {
+            success: "true",
+            data: toRawSave(plots),
+          },
+          null,
+          2
+        ),
+      ],
+      { type: "application/json" }
+    );
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = "plot-updated.json";
     a.click();
+
     URL.revokeObjectURL(url);
   }
 
@@ -230,11 +275,13 @@ export default function App() {
     <div className="page">
       <aside className="sidebar">
         <h1>ระบบจัดการแปลง</h1>
+        <p className="subtitle">React + Leaflet + JSON</p>
+
         <input
           className="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="ค้นหาเลขแปลง / เจ้าของ / พืช"
+          placeholder="ค้นหาเลขแปลง / ชื่อแปลง / เจ้าของ / พืช"
         />
 
         <div className="summary">
@@ -249,20 +296,49 @@ export default function App() {
           <div className="form">
             <h3>เพิ่มแปลงใหม่</h3>
 
-            <input value={newDetail.name} onChange={(e) => setNewDetail({ ...newDetail, name: e.target.value })} placeholder="ชื่อแปลง เช่น แปลงอ้อย A1" />
-            <input value={newDetail.owner} onChange={(e) => setNewDetail({ ...newDetail, owner: e.target.value })} placeholder="เจ้าของแปลง" />
-            <input value={newDetail.crop} onChange={(e) => setNewDetail({ ...newDetail, crop: e.target.value })} placeholder="ชนิดพืช เช่น อ้อย" />
+            <input
+              value={newDetail.name}
+              onChange={(e) =>
+                setNewDetail({ ...newDetail, name: e.target.value })
+              }
+              placeholder="ชื่อแปลง"
+            />
+
+            <input
+              value={newDetail.owner}
+              onChange={(e) =>
+                setNewDetail({ ...newDetail, owner: e.target.value })
+              }
+              placeholder="เจ้าของ"
+            />
+
+            <input
+              value={newDetail.crop}
+              onChange={(e) =>
+                setNewDetail({ ...newDetail, crop: e.target.value })
+              }
+              placeholder="พืช"
+            />
 
             <p>ปักจุดแล้ว: {newPoints.length} จุด</p>
 
-            <button onClick={() => setNewPoints((prev) => prev.slice(0, -1))}>ลบจุดล่าสุด</button>
+            <button onClick={() => setNewPoints((prev) => prev.slice(0, -1))}>
+              ลบจุดล่าสุด
+            </button>
+
             <button onClick={clearNewPlot}>ล้างข้อมูล</button>
-            <button onClick={saveNewPlot} className="success">บันทึกแปลงใหม่</button>
+
+            <button onClick={saveNewPlot} className="success">
+              บันทึกแปลงใหม่
+            </button>
           </div>
         )}
 
         <button onClick={downloadJson}>ดาวน์โหลด JSON</button>
-        <button onClick={resetData} className="danger">รีเซ็ตข้อมูลเดิม</button>
+
+        <button onClick={resetData} className="danger">
+          รีเซ็ตข้อมูลเดิม
+        </button>
 
         <h2>รายการแปลง</h2>
 
@@ -270,7 +346,9 @@ export default function App() {
           {filteredPlots.map((plot) => (
             <button
               key={plot.plot_id}
-              className={`plot-card ${selectedPlotId === plot.plot_id ? "active" : ""}`}
+              className={`plot-card ${
+                selectedPlotId === plot.plot_id ? "active" : ""
+              }`}
               onClick={() => selectPlot(plot)}
             >
               <b>แปลง {plot.plot_id}</b>
@@ -285,12 +363,26 @@ export default function App() {
 
       <main className="map-area">
         <MapContainer center={mapCenter} zoom={15} className="map">
-          <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <TileLayer
+            attribution="&copy; OpenStreetMap contributors"
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
 
-          <AddPointHandler isAdding={isAdding} onAddPoint={(point) => setNewPoints((prev) => [...prev, point])} />
+          <AddPointHandler
+            isAdding={isAdding}
+            onAddPoint={(point) =>
+              setNewPoints((prev) => [...prev, point])
+            }
+          />
 
           {filteredPlots.map((plot) => (
-            <Polygon key={plot.plot_id} positions={plot.latLngPoints} eventHandlers={{ click: () => selectPlot(plot) }}>
+            <Polygon
+              key={plot.plot_id}
+              positions={plot.latLngPoints}
+              eventHandlers={{
+                click: () => selectPlot(plot),
+              }}
+            >
               <Popup>
                 <b>แปลง {plot.plot_id}</b>
                 <br />
@@ -302,7 +394,8 @@ export default function App() {
                 <br />
                 พื้นที่: {formatArea(plot.area)}
                 <br />
-                จุดกึ่งกลาง: {plot.center[0].toFixed(6)}, {plot.center[1].toFixed(6)}
+                จุดกึ่งกลาง: {plot.center[0].toFixed(6)},{" "}
+                {plot.center[1].toFixed(6)}
               </Popup>
             </Polygon>
           ))}
@@ -312,7 +405,8 @@ export default function App() {
               <Popup>
                 <b>จุดกึ่งกลางแปลง {selectedPlot.plot_id}</b>
                 <br />
-                {selectedPlot.center[0].toFixed(6)}, {selectedPlot.center[1].toFixed(6)}
+                {selectedPlot.center[0].toFixed(6)},{" "}
+                {selectedPlot.center[1].toFixed(6)}
               </Popup>
             </Marker>
           )}
@@ -320,6 +414,7 @@ export default function App() {
           {newPoints.length > 0 && (
             <>
               <Polygon positions={newPoints} />
+
               {newPoints.map((point, index) => (
                 <Marker key={index} position={point} icon={markerIcon}>
                   <Popup>จุดที่ {index + 1}</Popup>
@@ -333,29 +428,49 @@ export default function App() {
           <div className="info-panel">
             <h2>แก้ไขรายละเอียดแปลง {selectedPlot.plot_id}</h2>
 
-            <input value={editDetail.name} onChange={(e) => setEditDetail({ ...editDetail, name: e.target.value })} placeholder="ชื่อแปลง เช่น แปลงอ้อย A1" />
-            <input value={editDetail.owner} onChange={(e) => setEditDetail({ ...editDetail, owner: e.target.value })} placeholder="เจ้าของแปลง" />
-            <input value={editDetail.phone} onChange={(e) => setEditDetail({ ...editDetail, phone: e.target.value })} placeholder="เบอร์โทร" />
-            <input value={editDetail.crop} onChange={(e) => setEditDetail({ ...editDetail, crop: e.target.value })} placeholder="ชนิดพืช เช่น อ้อย" />
-            <input value={editDetail.address} onChange={(e) => setEditDetail({ ...editDetail, address: e.target.value })} placeholder="ที่ตั้งแปลง" />
-            <input value={editDetail.soilType} onChange={(e) => setEditDetail({ ...editDetail, soilType: e.target.value })} placeholder="ประเภทดิน เช่น ดินร่วน" />
-            <input value={editDetail.waterSource} onChange={(e) => setEditDetail({ ...editDetail, waterSource: e.target.value })} placeholder="แหล่งน้ำ เช่น น้ำฝน / บ่อ / คลอง" />
+            <input
+              value={editDetail.name}
+              onChange={(e) =>
+                setEditDetail({ ...editDetail, name: e.target.value })
+              }
+              placeholder="ชื่อแปลง"
+            />
 
-            <label>วันที่ปลูก</label>
-            <input type="date" value={editDetail.plantDate} onChange={(e) => setEditDetail({ ...editDetail, plantDate: e.target.value })} />
+            <input
+              value={editDetail.owner}
+              onChange={(e) =>
+                setEditDetail({ ...editDetail, owner: e.target.value })
+              }
+              placeholder="เจ้าของ"
+            />
 
-            <label>วันที่คาดว่าจะเก็บเกี่ยว</label>
-            <input type="date" value={editDetail.harvestDate} onChange={(e) => setEditDetail({ ...editDetail, harvestDate: e.target.value })} />
+            <input
+              value={editDetail.crop}
+              onChange={(e) =>
+                setEditDetail({ ...editDetail, crop: e.target.value })
+              }
+              placeholder="พืช"
+            />
 
-            <input value={editDetail.note} onChange={(e) => setEditDetail({ ...editDetail, note: e.target.value })} placeholder="หมายเหตุ" />
-
-            <button onClick={savePlotDetail} className="success">บันทึกรายละเอียดแปลง</button>
+            <button onClick={savePlotDetail} className="success">
+              บันทึกรายละเอียดแปลง
+            </button>
 
             <hr />
 
-            <p><b>พื้นที่:</b> {formatArea(selectedPlot.area)}</p>
-            <p><b>จุดกึ่งกลาง:</b> {selectedPlot.center[0].toFixed(6)}, {selectedPlot.center[1].toFixed(6)}</p>
-            <p><b>จำนวนจุด:</b> {selectedPlot.latLngPoints.length}</p>
+            <p>
+              <b>พื้นที่:</b> {formatArea(selectedPlot.area)}
+            </p>
+
+            <p>
+              <b>จุดกึ่งกลาง:</b>{" "}
+              {selectedPlot.center[0].toFixed(6)},{" "}
+              {selectedPlot.center[1].toFixed(6)}
+            </p>
+
+            <p>
+              <b>จำนวนจุด:</b> {selectedPlot.latLngPoints.length}
+            </p>
           </div>
         )}
       </main>

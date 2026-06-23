@@ -230,7 +230,6 @@ export default function App() {
     <div className="page">
       <aside className="sidebar">
         <h1>ระบบจัดการแปลง</h1>
-
         <input
           className="search"
           value={search}
@@ -252,11 +251,7 @@ export default function App() {
 
             <input value={newDetail.name} onChange={(e) => setNewDetail({ ...newDetail, name: e.target.value })} placeholder="ชื่อแปลง เช่น แปลงอ้อย A1" />
             <input value={newDetail.owner} onChange={(e) => setNewDetail({ ...newDetail, owner: e.target.value })} placeholder="เจ้าของแปลง" />
-            <input value={newDetail.phone} onChange={(e) => setNewDetail({ ...newDetail, phone: e.target.value })} placeholder="เบอร์โทร" />
             <input value={newDetail.crop} onChange={(e) => setNewDetail({ ...newDetail, crop: e.target.value })} placeholder="ชนิดพืช เช่น อ้อย" />
-            <input value={newDetail.address} onChange={(e) => setNewDetail({ ...newDetail, address: e.target.value })} placeholder="ที่ตั้งแปลง" />
-            <input value={newDetail.soilType} onChange={(e) => setNewDetail({ ...newDetail, soilType: e.target.value })} placeholder="ประเภทดิน เช่น ดินร่วน" />
-            <input value={newDetail.waterSource} onChange={(e) => setNewDetail({ ...newDetail, waterSource: e.target.value })} placeholder="แหล่งน้ำ เช่น น้ำฝน / บ่อ / คลอง" />
 
             <label>วันที่ปลูก</label>
             <input type="date" value={newDetail.plantDate} onChange={(e) => setNewDetail({ ...newDetail, plantDate: e.target.value })} />

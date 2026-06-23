@@ -274,8 +274,7 @@ export default function App() {
   return (
     <div className="page">
       <aside className="sidebar">
-        <h1>ระบบจัดการแปลง222</h1>
-        <p className="subtitle">React + Leaflet + JSON</p>
+        <h1>ระบบจัดการแปลง</h1>
 
         <input
           className="search"

@@ -1,17 +1,22 @@
 {
+  "homepage": "https://siriyada1502.github.io/Conversion_management",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
+    "leaflet": "latest",
+    "proj4": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "leaflet": "latest",
     "react-leaflet": "latest",
-    "proj4": "latest"
+    "vite": "latest"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
 }

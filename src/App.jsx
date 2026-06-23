@@ -253,14 +253,6 @@ export default function App() {
             <input value={newDetail.owner} onChange={(e) => setNewDetail({ ...newDetail, owner: e.target.value })} placeholder="เจ้าของแปลง" />
             <input value={newDetail.crop} onChange={(e) => setNewDetail({ ...newDetail, crop: e.target.value })} placeholder="ชนิดพืช เช่น อ้อย" />
 
-            <label>วันที่ปลูก</label>
-            <input type="date" value={newDetail.plantDate} onChange={(e) => setNewDetail({ ...newDetail, plantDate: e.target.value })} />
-
-            <label>วันที่คาดว่าจะเก็บเกี่ยว</label>
-            <input type="date" value={newDetail.harvestDate} onChange={(e) => setNewDetail({ ...newDetail, harvestDate: e.target.value })} />
-
-            <input value={newDetail.note} onChange={(e) => setNewDetail({ ...newDetail, note: e.target.value })} placeholder="หมายเหตุ" />
-
             <p>ปักจุดแล้ว: {newPoints.length} จุด</p>
 
             <button onClick={() => setNewPoints((prev) => prev.slice(0, -1))}>ลบจุดล่าสุด</button>
